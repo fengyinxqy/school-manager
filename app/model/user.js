@@ -24,13 +24,6 @@ module.exports = app => {
       allowNull: false,
     },
   }, {
-    // 配置索引
-    indexes: [
-      {
-        unique: true,
-        fields: [ 'username' ],
-      },
-    ],
     // 禁用 Sequelize 自动创建的 createdAt 和 updatedAt 字段
     timestamps: true,
     // 使用下划线命名

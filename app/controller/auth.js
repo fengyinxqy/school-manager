@@ -50,7 +50,7 @@ class AuthController extends Controller {
       // 返回用户信息
       ctx.success({
         data: {
-          user: {
+          userInfo: {
             id: user.id,
             username: user.username,
             role: user.role,
