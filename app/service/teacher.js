@@ -7,8 +7,20 @@ const bcrypt = require('bcryptjs');
 class TeacherService extends Service {
   async getAllTeachers() {
     try {
-      const teachers = await this.ctx.model.Teacher.findAll();
-      return teachers;
+      const teachers = await this.ctx.model.Teacher.findAll({
+        include: [{
+          model: this.ctx.model.Subject,
+          attributes: [ 'name' ],
+        }],
+      });
+
+      const formattedTeachers = teachers.map(teacher => ({
+        ...teacher.get(),
+        subjectName: teacher.subject ? teacher.subject.name : null,
+        subject: undefined,
+      }));
+
+      return formattedTeachers;
     } catch (error) {
       this.ctx.logger.error('[TeacherService][getAllTeachers] error:', error);
       return {
@@ -21,7 +33,7 @@ class TeacherService extends Service {
 
   async createTeacher(teacherData) {
     const { ctx } = this;
-    const { username, password, subject } = teacherData;
+    const { username, password, subjectId } = teacherData;
 
     try {
       // 检查用户名是否已存在
@@ -48,7 +60,7 @@ class TeacherService extends Service {
         const teacher = await ctx.model.Teacher.create({
           user_id: user.id,
           name: username,
-          subject,
+          subject_id: subjectId,
         }, { transaction: t });
 
         return {

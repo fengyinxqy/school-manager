@@ -57,7 +57,7 @@ class AuthController extends Controller {
             ...(user.teacherProfile ? {
               teacherInfo: {
                 name: user.teacherProfile.name,
-                subject: user.teacherProfile.subject,
+                subject_id: user.teacherProfile.subject_id,
               },
             } : {}),
           },
@@ -97,7 +97,7 @@ class AuthController extends Controller {
 
   async refreshToken() {
     const { ctx, app } = this;
-    const refreshToken = ctx.get('refresh-token');
+    const refreshToken = ctx.cookies.get('refresh_token');
 
     if (!refreshToken) {
       return ctx.error({
@@ -113,6 +113,7 @@ class AuthController extends Controller {
       // 检查 refresh token 是否存在于 Redis
       const storedToken = await ctx.service.cache.getRefreshToken(decoded.id);
       if (!storedToken || storedToken !== refreshToken) {
+        ctx.status = 400;
         return ctx.error({
           code: error_code.UNAUTHORIZED,
           message: '无效的刷新令牌',
@@ -131,17 +132,35 @@ class AuthController extends Controller {
       // 生成新的令牌对
       const tokens = await ctx.service.user.generateTokens(user);
 
+      // 更新cookie中的token
+      ctx.cookies.set('access_token', tokens.accessToken, {
+        maxAge: 3600 * 1000, // 1小时
+        httpOnly: true,
+        secure: false,
+        sameSite: 'strict',
+      });
+
+      ctx.cookies.set('refresh_token', tokens.refreshToken, {
+        maxAge: 8 * 3600 * 1000, // 8小时
+        httpOnly: true,
+        secure: false,
+        sameSite: 'strict',
+      });
+
       ctx.success({
-        data: tokens,
-        message: '令牌刷新成功',
+        data: {
+          message: '令牌刷新成功',
+        },
       });
     } catch (error) {
       if (error.name === 'TokenExpiredError') {
+        ctx.status = 400;
         ctx.error({
           code: error_code.TOKEN_EXPIRED,
           message: '刷新令牌已过期',
         });
       } else {
+        ctx.status = 400;
         ctx.error({
           code: error_code.UNAUTHORIZED,
           message: '无效的刷新令牌',

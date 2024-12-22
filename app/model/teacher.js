@@ -22,8 +22,14 @@ module.exports = app => {
       type: STRING(100),
       allowNull: false,
     },
-    subject: {
-      type: STRING(100),
+    subject_id: {
+      type: INTEGER,
+      allowNull: false,
+      references: {
+        model: 'subject',
+        key: 'id',
+      },
+      comment: '科目ID',
     },
   }, {
     // 配置索引
@@ -38,6 +44,10 @@ module.exports = app => {
     freezeTableName: true,
     tableName: 'teacher',
   });
+
+  Teacher.associate = function() {
+    app.model.Teacher.belongsTo(app.model.Subject, { foreignKey: 'subject_id' });
+  };
 
   return Teacher;
 };

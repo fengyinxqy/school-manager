@@ -13,7 +13,7 @@ class TeacherController extends Controller {
     const teacherData = ctx.request.body;
 
     // 参数验证
-    if (!teacherData.username || !teacherData.password) {
+    if (!teacherData.username || !teacherData.password || !teacherData.subjectId) {
       return ctx.error({
         code: 400,
         message: '缺少必要参数',

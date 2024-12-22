@@ -15,4 +15,7 @@ module.exports = app => {
 
   // 需要验证的路由示例
   // router.get('/api/user/info', auth(), controller.user.info);
+
+  // 学科相关路由
+  require('./router/subject')(app);
 };

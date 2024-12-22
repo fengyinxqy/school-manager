@@ -5,6 +5,7 @@ module.exports = (options = { required: true }) => {
     const token = ctx.cookies.get('access_token');
 
     if (!token && options.required) {
+      ctx.status = 401;
       return ctx.error({
         code: ErrorCode.UNAUTHORIZED,
         message: '未登录',
@@ -15,6 +16,7 @@ module.exports = (options = { required: true }) => {
       if (token) {
         const isBlacklisted = await ctx.service.cache.isTokenBlacklisted(token);
         if (isBlacklisted) {
+          ctx.status = 401;
           return ctx.error({
             code: ErrorCode.TOKEN_INVALID,
             message: 'token 已失效',
@@ -29,18 +31,21 @@ module.exports = (options = { required: true }) => {
     } catch (err) {
       switch (err.name) {
         case 'TokenExpiredError':
+          ctx.status = 401;
           ctx.error({
             code: ErrorCode.TOKEN_EXPIRED,
             message: 'token 已过期',
           });
           break;
         case 'JsonWebTokenError':
+          ctx.status = 401;
           ctx.error({
             code: ErrorCode.TOKEN_INVALID,
             message: '无效的 token',
           });
           break;
         default:
+          ctx.status = 500;
           ctx.error({
             code: ErrorCode.INTERNAL_ERROR,
             message: '服务器错误',
